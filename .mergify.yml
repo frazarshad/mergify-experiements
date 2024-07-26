@@ -1,5 +1,23 @@
 # Linear queue for the main branch.
 queue_rules:
+  - name: high_priority
+    commit_message_template: |-
+      {{ title }} (#{{ number }})
+
+      {{ body | trim }}
+    queue_conditions:
+      - base=main
+      - label=priority:high
+      - or:
+          - check-pending=integration-test-result
+          - check-success=integration-test-result
+          - label=bypass:integration
+    merge_conditions:
+      - base=main
+      # Require integration tests before merging only
+      - or:
+          - label=bypass:integration
+          - check-success=integration-test-result
   - name: main
     commit_message_template: |-
       {{ title }} (#{{ number }})
