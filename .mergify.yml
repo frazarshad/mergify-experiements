@@ -13,6 +13,7 @@ queue_rules:
           - label=bypass:integration
     merge_conditions:
       - base=main
+      - label=bug
       # Require integration tests before merging only
       - or:
           - label=bypass:integration
