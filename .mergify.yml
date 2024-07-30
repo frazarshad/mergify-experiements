@@ -40,7 +40,6 @@ pull_request_rules:
       queue:
         name: main
         merge_method: merge
-        update_method: rebase
   - name: squash to main
     conditions:
       - base=main
