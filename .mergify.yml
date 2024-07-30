@@ -46,7 +46,6 @@ pull_request_rules:
           - label=bypass:linear-history
     actions:
       queue:
-        name: main
         allow_merging_configuration_change: true
         merge_method: merge
   - name: rebase updates then merge to main
@@ -56,7 +55,6 @@ pull_request_rules:
       - linear-history
     actions:
       queue:
-        name: main
         allow_merging_configuration_change: true
         merge_method: merge
         update_method: rebase
@@ -66,7 +64,6 @@ pull_request_rules:
       - label=automerge:squash
     actions:
       queue:
-        name: main
         allow_merging_configuration_change: true
         merge_method: squash
 
