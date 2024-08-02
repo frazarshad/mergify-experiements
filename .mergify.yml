@@ -47,14 +47,14 @@ pull_request_rules:
     actions:
       queue:
         merge_method: merge
-  - name: rebase updates then merge to main
-    conditions:
-      - base=main
-      - label=automerge:rebase
-    actions:
-      queue:
-        merge_method: merge
-        update_method: rebase
+  # - name: rebase updates then merge to main
+  #   conditions:
+  #     - base=main
+  #     - label=automerge:rebase
+  #   actions:
+  #     queue:
+  #       merge_method: merge
+  #       update_method: rebase
   - name: squash to main
     conditions:
       - base=main
@@ -66,7 +66,6 @@ pull_request_rules:
     conditions:
       - base=main
       - label=automerge:rebase
-      - linear-history
     actions:
       rebase:
         autosquash: true
