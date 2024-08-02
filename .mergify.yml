@@ -13,7 +13,7 @@ queue_rules:
           - check-success=integration-test-result
           - label=bypass:integration
     merge_conditions:
-      - base=main
+      - base=master
       # Require integration tests before merging only
       - or:
           - label=bypass:integration
@@ -47,14 +47,14 @@ pull_request_rules:
     actions:
       queue:
         merge_method: merge
-  # - name: rebase updates then merge to main
-  #   conditions:
-  #     - base=main
-  #     - label=automerge:rebase
-  #   actions:
-  #     queue:
-  #       merge_method: merge
-  #       update_method: rebase
+  - name: rebase updates then merge to main
+    conditions:
+      - base=main
+      - label=automerge:rebase
+    actions:
+      queue:
+        merge_method: merge
+        update_method: rebase
   - name: squash to main
     conditions:
       - base=main
@@ -62,10 +62,10 @@ pull_request_rules:
     actions:
       queue:
         merge_method: squash
-  - name: rebase and autosquash
-    conditions:
-      - base=main
-      - label=automerge:rebase
-    actions:
-      rebase:
-        autosquash: true
+  # - name: rebase and autosquash
+  #   conditions:
+  #     - base=main
+  #     - label=automerge:rebase
+  #   actions:
+  #     rebase:
+  #       autosquash: true
