@@ -1,43 +1,58 @@
 # Linear queue for the main branch.
+shared:
+    commit_message_template: &commit-message-template |-
+      {{ title }} (#{{ number }})
+
+      {{ body | trim }}
+    queue_checks: &queue-checks
+      - base=main
+      - or:
+          - check-pending=integration-test-result
+          - check-success=integration-test-result
+          - label=bypass:integration
+    merge_checks: &merge-checks
+      - base=main
+      # Require integration tests before merging only
+      - or:
+          - label=bypass:integration
+          - check-success=integration-test-result
+    priority_rules: &priority-rule-checks
+      - name: high priority
+        conditions:
+          - label=priority:high
+        priority: high
+
 queue_rules:
-  - name: high_priority_main
-    commit_message_template: |-
-      {{ title }} (#{{ number }})
+  - name: rebase_main
+    commit_message_template: *commit-message-template
+    queue_conditions: *queue-checks
+    merge_conditions: *merge-checks
+    priority_rules: *priority-rule-checks
+    merge_method: merge
+    update_method: rebase
 
-      {{ body | trim }}
-    queue_conditions:
-      - base=main
-      - label=priority:high
-      - or:
-          - check-pending=integration-test-result
-          - check-success=integration-test-result
-          - label=bypass:integration
-    merge_conditions:
-      - base=master
-      # Require integration tests before merging only
-      - or:
-          - label=bypass:integration
-          - check-success=integration-test-result
-  - name: main
-    commit_message_template: |-
-      {{ title }} (#{{ number }})
+  - name: merge_main
+    commit_message_template: *commit-message-template
+    queue_conditions: *queue-checks
+    merge_conditions: *merge-checks
+    priority_rules: *priority-rule-checks
+    disallow_checks_interruption_from_queues:
+      - rebase_main
+    merge_method: merge
 
-      {{ body | trim }}
-    queue_conditions:
-      - base=main
-      - or:
-          - check-pending=integration-test-result
-          - check-success=integration-test-result
-          - label=bypass:integration
-    merge_conditions:
-      - base=main
-      # Require integration tests before merging only
-      - or:
-          - label=bypass:integration
-          - check-success=integration-test-result
+  - name: squash_main
+    commit_message_template: *commit-message-template
+    queue_conditions: *queue-checks
+    merge_conditions: *merge-checks
+    priority_rules: *priority-rule-checks
+    disallow_checks_interruption_from_queues:
+      - rebase_main
+      - merge_main
+    merge_method: squash
+
 
 pull_request_rules:
-  - name: merge to main
+  - name: merge to master
     conditions:
       - base=main
       - label=automerge:no-update
@@ -46,28 +61,18 @@ pull_request_rules:
           - label=bypass:linear-history
     actions:
       queue:
-        merge_method: merge
-  - name: rebase updates then merge to main
+        name: merge_main
+  - name: rebase updates then merge to master
     conditions:
       - base=main
       - label=automerge:rebase
-      - linear-history
     actions:
       queue:
-        merge_method: merge
-        update_method: rebase
-  - name: squash to main
+        name: rebase_main
+  - name: squash to master
     conditions:
       - base=main
       - label=automerge:squash
     actions:
       queue:
-        merge_method: squash
-  - name: rebase and autosquash
-    conditions:
-      - base=main
-      - label=automerge:rebase
-      - -linear-history
-    actions:
-      rebase:
-        autosquash: true
+        name: squash_main
