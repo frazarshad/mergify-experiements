@@ -4,55 +4,98 @@ shared:
       {{ title }} (#{{ number }})
 
       {{ body | trim }}
-    queue_checks: &queue-checks
+    queue_conditions: &queue-conditions
       - base=main
       - or:
           - check-pending=integration-test-result
           - check-success=integration-test-result
           - label=bypass:integration
-    merge_checks: &merge-checks
+    merge_conditions: &merge-conditions
       - base=main
       # Require integration tests before merging only
       - or:
           - label=bypass:integration
           - check-success=integration-test-result
-    priority_rules: &priority-rule-checks
-      - name: high priority
-        conditions:
-          - label=priority:high
-        priority: high
 
 queue_rules:
-  - name: rebase_main
+  - name: high_priority_rebase
     commit_message_template: *commit-message-template
-    queue_conditions: *queue-checks
-    merge_conditions: *merge-checks
-    priority_rules: *priority-rule-checks
+    queue_conditions: *queue-conditions
+    merge_conditions: *merge-conditions
     merge_method: merge
     update_method: rebase
 
-  - name: merge_main
+  - name: high_priority_merge
     commit_message_template: *commit-message-template
-    queue_conditions: *queue-checks
-    merge_conditions: *merge-checks
-    priority_rules: *priority-rule-checks
+    queue_conditions: *queue-conditions
+    merge_conditions: *merge-conditions
     disallow_checks_interruption_from_queues:
-      - rebase_main
+      - high_priority_rebase
     merge_method: merge
 
-  - name: squash_main
+  - name: high_priority_squash
     commit_message_template: *commit-message-template
-    queue_conditions: *queue-checks
-    merge_conditions: *merge-checks
-    priority_rules: *priority-rule-checks
+    queue_conditions: *queue-conditions
+    merge_conditions: *merge-conditions
     disallow_checks_interruption_from_queues:
-      - rebase_main
-      - merge_main
+      - high_priority_rebase
+      - high_priority_merge
+    merge_method: squash
+
+  - name: rebase
+    commit_message_template: *commit-message-template
+    queue_conditions: *queue-conditions
+    merge_conditions: *merge-conditions
+    merge_method: merge
+    update_method: rebase
+
+  - name: merge
+    commit_message_template: *commit-message-template
+    queue_conditions: *queue-conditions
+    merge_conditions: *merge-conditions
+    disallow_checks_interruption_from_queues:
+      - rebase
+    merge_method: merge
+
+  - name: squash
+    commit_message_template: *commit-message-template
+    queue_conditions: *queue-conditions
+    merge_conditions: *merge-conditions
+    disallow_checks_interruption_from_queues:
+      - rebase
+      - merge
     merge_method: squash
 
 
 pull_request_rules:
-  - name: merge to master
+  - name:  high priority - merge to main
+    conditions:
+      - base=main
+      - label=automerge:no-update
+      - label=priority:high
+      - or:
+          - '#commits-behind=0'
+          - label=bypass:linear-history
+    actions:
+      queue:
+        name: high_priority_merge
+  - name: high priority - rebase updates then merge to main
+    conditions:
+      - base=main
+      - label=automerge:rebase
+      - label=priority:high
+    actions:
+      queue:
+        name: high_priority_rebase
+  - name: high priority - squash to main
+    conditions:
+      - base=main
+      - label=automerge:squash
+      - label=priority:high
+    actions:
+      queue:
+        name: high_priority_squash
+  - name: merge to main
     conditions:
       - base=main
       - label=automerge:no-update
@@ -61,18 +104,18 @@ pull_request_rules:
           - label=bypass:linear-history
     actions:
       queue:
-        name: merge_main
-  - name: rebase updates then merge to master
+        name: merge
+  - name: rebase updates then merge to main
     conditions:
       - base=main
       - label=automerge:rebase
     actions:
       queue:
-        name: rebase_main
-  - name: squash to master
+        name: rebase
+  - name: squash to main
     conditions:
       - base=main
       - label=automerge:squash
     actions:
       queue:
-        name: squash_main
+        name: squash
