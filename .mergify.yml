@@ -12,6 +12,7 @@ shared:
           - label=bypass:integration
     merge_conditions: &merge-conditions
       - base=main
+      - label=bug
       # Require integration tests before merging only
       - or:
           - label=bypass:integration
