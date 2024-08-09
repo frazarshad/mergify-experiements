@@ -5,7 +5,7 @@ shared:
 
       {{ body | trim }}
     queue_conditions: &queue-conditions
-      - base=main
+      - base=master
       - or:
           - check-pending=integration-test-result
           - check-success=integration-test-result
@@ -14,22 +14,26 @@ shared:
       - and: *queue-conditions
       - label=priority:high
     merge_conditions: &merge-conditions
-      - base=main
+      - label=bug
+      - base=master
       # Require integration tests before merging only
       - or:
           - label=bypass:integration
           - check-success=integration-test-result
     pr_queue_merge_conditions: &pr-queue-merge-conditions
-      - base=main
+      - base=master
       - label=automerge:no-update
       - or:
           - '#commits-behind=0'
           - label=bypass:linear-history
     pr_queue_rebase_conditions: &pr-queue-rebase-conditions
-      - base=main
+      - base=master
       - label=automerge:rebase
+      - or:
+          - '#commits-behind>0'
+          - linear-history
     pr_queue_squash_conditions: &pr-queue-squash-conditions
-      - base=main
+      - base=master
       - label=automerge:squash
 
 queue_rules:
@@ -81,41 +85,52 @@ queue_rules:
       - merge
     merge_method: squash
 
-
 pull_request_rules:
-  - name:  high priority - merge to main
+  - name:  high priority - merge to master
     conditions:
       - and: *pr-queue-merge-conditions
       - label=priority:high
     actions:
       queue:
         name: high_priority_merge
-  - name: high priority - rebase updates then merge to main
+  - name: high priority - rebase updates then merge to master
     conditions:
       - and: *pr-queue-rebase-conditions
       - label=priority:high
     actions:
       queue:
         name: high_priority_rebase
-  - name: high priority - squash to main
+  - name: high priority - squash to master
     conditions:
       - and: *pr-queue-squash-conditions
       - label=priority:high
     actions:
       queue:
         name: high_priority_squash
-  - name: merge to main
+  - name: merge to master
     conditions: *pr-queue-merge-conditions
     actions:
       queue:
         name: merge
-  - name: rebase updates then merge to main
+  - name: rebase updates then merge to master
     conditions: *pr-queue-rebase-conditions
     actions:
       queue:
         name: rebase
-  - name: squash to main
+  - name: squash to master
     conditions: *pr-queue-squash-conditions
     actions:
       queue:
         name: squash
+  - name: rebase and autosquash
+    conditions:
+      - base=master
+      - label=automerge:rebase
+      - '#commits-behind=0'
+      - or:
+        - -linear-history
+        - check-failure=no-fixup-commits
+      - -draft
+    actions:
+      rebase:
+        autosquash: true
