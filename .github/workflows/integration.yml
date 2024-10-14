@@ -36,6 +36,8 @@ jobs:
         variation: [one, two]
     timeout-minutes: 5
     steps:
+      - name: sleep
+        run: sleep 200
       - uses: actions/checkout@v3
       - name: Get the behavior from the PR description
         id: get-behavior
