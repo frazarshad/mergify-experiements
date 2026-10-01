@@ -25,7 +25,8 @@ jobs:
       !contains(github.event.pull_request.labels.*.name, 'bypass:linear-history')
     steps:
       # Decide from the API so most runs skip cloning the repo.
-      - name: Check for fixup commits and approval
+      # Test copy: the approval gate is skipped (no required reviews on this repo).
+      - name: Check for fixup commits
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
@@ -33,14 +34,11 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          pr=$(gh pr view "$PR_NUMBER" --json commits,reviewDecision)
+          pr=$(gh pr view "$PR_NUMBER" --json commits)
           fixups=$(jq '[.commits[].messageHeadline | select(test("^(fixup|squash|amend)! "))] | length' <<<"$pr")
-          decision=$(jq -r '.reviewDecision // ""' <<<"$pr")
 
           if [ "$fixups" -eq 0 ]; then
             echo "No fixup commits."
-          elif [ "$decision" != "APPROVED" ]; then
-            echo "Fixup commits will be folded once the PR is approved (review decision: ${decision:-none})."
           else
             echo "fold=true" >>"$GITHUB_OUTPUT"
           fi
