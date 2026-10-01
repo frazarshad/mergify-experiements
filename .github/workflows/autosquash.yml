@@ -48,7 +48,7 @@ jobs:
         if: steps.check.outputs.fold == 'true'
         uses: actions/create-github-app-token@v2
         with:
-          app-id: ${{ secrets.AGORIC_CI_BOT_APP_ID }}
+          app-id: ${{ vars.AGORIC_CI_BOT_APP_ID }}
           private-key: ${{ secrets.AGORIC_CI_BOT_PRIVATE_KEY }}
           permission-contents: write
           permission-workflows: write
