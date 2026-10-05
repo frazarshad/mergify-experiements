@@ -1,41 +1,47 @@
 # Linear queue for the main branch.
 shared:
-    commit_message_format: &commit-message-format
-      title: pr-title
-      body: pr-body
-    queue_conditions: &queue-conditions
-      - base=main
-      - or:
-          - check-pending=integration-test-result
-          - check-success=integration-test-result
-          - label=bypass:integration
-    merge_conditions: &merge-conditions
-      - base=main
-      # Rebase PRs with fixup commits are allowed to enter the merge queue but 
-      # should not be allowed to merge if there are leftover fixup commits after rebase
-      - or:
-          - label=bypass:linear-history
-          - check-success=no-fixup-commits
-          - check-skipped=no-fixup-commits
-      # Require integration tests before merging only
-      - or:
-          - label=bypass:integration
-          - check-success=integration-test-result
-    pr_queue_merge_conditions: &pr-queue-merge-conditions
-      - base=main
-      - label=automerge:no-update
-      - or:
-          - '#commits-behind=0'
-          - label=bypass:linear-history
-    pr_queue_rebase_conditions: &pr-queue-rebase-conditions
-      - base=main
-      - label=automerge:rebase
-      - or:
-          - '#commits-behind>0'
-          - linear-history
-    pr_queue_squash_conditions: &pr-queue-squash-conditions
-      - base=main
-      - label=automerge:squash
+  commit_message_format: &commit-message-format
+    title: pr-title
+    body: pr-body
+  queue_conditions: &queue-conditions
+    - base=main
+    - or:
+        - check-pending=integration-test-result
+        - check-success=integration-test-result
+        - label=bypass:integration
+  merge_conditions: &merge-conditions
+    - base=main
+    # Rebase PRs with fixup commits are allowed to enter the merge queue but
+    # should not be allowed to merge if there are leftover fixup commits after rebase
+    - or:
+        - label=bypass:linear-history
+        - check-success=no-fixup-commits
+        - check-skipped=no-fixup-commits
+    # Require integration tests before merging only
+    - or:
+        - label=bypass:integration
+        - check-success=integration-test-result
+  pr_queue_merge_conditions: &pr-queue-merge-conditions
+    - base=main
+    - label=automerge:no-update
+    - or:
+        - "#commits-behind=0"
+        - label=bypass:linear-history
+  pr_queue_rebase_conditions: &pr-queue-rebase-conditions
+    - base=main
+    - label=automerge:rebase
+    - or:
+        - "#commits-behind>0"
+        - linear-history
+  pr_queue_squash_conditions: &pr-queue-squash-conditions
+    - base=main
+    - label=automerge:squash
+
+merge_queue:
+  max_parallel_checks: 1
+  queued_label: null
+  dequeued_label: null
+  status_comments: none
 
 priority_rules:
   - name: high_priority
@@ -83,7 +89,7 @@ pull_request_rules:
     conditions:
       - base=main
       - label=automerge:rebase
-      - '#commits-behind=0'
+      - "#commits-behind=0"
       - -linear-history
       - -draft
     actions:
