@@ -1,4 +1,4 @@
-# Linear queue for the main branch.
+# Linear queue for the main branch.22
 shared:
   commit_message_format: &commit-message-format
     title: pr-title
