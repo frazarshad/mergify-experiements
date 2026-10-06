@@ -1,0 +1,15 @@
+# Kodiak config: https://kodiakhq.com/docs/config-reference
+# Mirrors the Mergify labels so CI workflows keep working unchanged.
+version = 1
+
+[merge]
+# Any of these labels marks a pull request ready to merge.
+automerge_label = ["automerge:rebase", "automerge:no-update", "automerge:squash"]
+# Default method; squash pull requests also need the
+# `kodiak: merge.method = "squash"` label.
+method = "merge"
+priority_merge_label = "priority:high"
+
+[merge.message]
+title = "pull_request_title"
+body = "pull_request_body"

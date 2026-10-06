@@ -37,8 +37,12 @@ jobs:
           pr=$(gh pr view "$PR_NUMBER" --json commits)
           fixups=$(jq '[.commits[].messageHeadline | select(test("^(fixup|squash|amend)! "))] | length' <<<"$pr")
 
-          if [ "$fixups" -eq 0 ]; then
-            echo "No fixup commits."
+          # `gh pr view` doesn't report parents, so ask the REST API.
+          merges=$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER/commits" --paginate \
+            --jq '.[] | select(.parents | length > 1) | .sha' | wc -l)
+
+          if [ "$fixups" -eq 0 ] && [ "$merges" -eq 0 ]; then
+            echo "No fixup or merge commits."
           else
             echo "fold=true" >>"$GITHUB_OUTPUT"
           fi
