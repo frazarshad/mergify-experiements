@@ -1,0 +1,40 @@
+name: Required check
+
+# Test-only job for the merge queue: takes ~60s and must pass on PRs and in
+# the queue. Override with a line like `#required-check: {"sleep": 90, "exitCode": 1}`
+# in the PR description.
+
+on:
+  pull_request:
+  merge_group:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  required-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Get the behavior from the PR description
+        id: get-behavior
+        uses: actions/github-script@v6
+        with:
+          result-encoding: string
+          script: |
+            let behavior = '{}';
+            if (context.payload.pull_request) {
+              const { body } = context.payload.pull_request;
+              const result = /^\#required-check:\s+(.*)$/m.exec(body || '');
+              if (result) {
+                behavior = result[1];
+              }
+            }
+            console.log(behavior);
+            return behavior;
+
+      - name: Run for 60 seconds
+        run: |
+          sleep ${{ fromJSON(steps.get-behavior.outputs.result).sleep || 60 }}
+          exit ${{ fromJSON(steps.get-behavior.outputs.result).exitCode || 0 }}
